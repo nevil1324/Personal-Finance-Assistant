@@ -191,7 +191,7 @@ export default function Transactions({ refreshTrigger }) {
           ? tx.date.slice(0, 10)
           : new Date(tx.date).toISOString().slice(0, 10)
         : "",
-      note: tx.note ?? tx.description ?? "",
+      note: tx.note ?? tx.note ?? "",
       type: tx.type ?? "expense",
     });
   }
@@ -213,7 +213,7 @@ export default function Transactions({ refreshTrigger }) {
         amount: Number(editData.amount),
         date: editData.date || undefined,
         category: editData.category || undefined,
-        description: editData.note || undefined,
+        note: editData.note || undefined,
         type: editData.type || undefined,
       };
       const res = await api.put(`/transactions/${id}`, payload);
@@ -472,7 +472,7 @@ export default function Transactions({ refreshTrigger }) {
                       {getIcon(it.category)} {it.category}
                     </td>
                     <td style={{ padding: 8 }}>{it.amount}</td>
-                    <td style={{ padding: 8 }}>{it.note || it.description}</td>
+                    <td style={{ padding: 8 }}>{it.note || it.note}</td>
                     <td style={{ padding: 8 }}>
                       <button
                         className="icon-btn"

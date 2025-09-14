@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Query, Depends, HTTPException, 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from .schemas import UserCreate, Token, TransactionCreate, OCRResult, CategoryCreate
 from .crud import create_user, get_user_by_email, create_transaction, get_transactions, aggregate_by_category, aggregate_by_date, count_transactions, create_category, list_categories
-from .utils import ocr_image_bytes, auto_parse_transactions, parse_pdf_table
+from .utils import ocr_image_bytes, auto_parse_transactions, parse_pdf_table,parse_pos_receipt
 from .auth import hash_password, verify_password, create_access_token, decode_token
 from .crud import update_transaction as update_transaction_crud, delete_transaction as delete_transaction_crud, get_user_by_id
 from datetime import datetime
@@ -167,7 +167,11 @@ async def agg_date(start: str | None = None, end: str | None = None, tx_type: st
 async def ocr_upload(file: UploadFile = File(...), user_id = Depends(get_current_user), auto_create: bool = Query(False)):
     content = await file.read()
     text = await ocr_image_bytes(content)
-    parsed = auto_parse_transactions(text)
+    # parsed = auto_parse_transactions(text)
+    # if not parsed:
+    pos_tx = parse_pos_receipt(text)
+    parsed = [pos_tx] if pos_tx else []
+
     created = []
     if auto_create and parsed:
         for p in parsed:

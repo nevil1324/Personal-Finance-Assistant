@@ -80,3 +80,47 @@ def parse_pdf_table(file_bytes: bytes):
     except Exception:
         pass
     return rows
+
+import re
+
+def parse_pos_receipt(text: str):
+    """
+    Parse POS receipt text to extract total amount.
+    Returns transaction dict or None.
+    """
+    if not text:
+        return None
+
+    lines = text.splitlines()
+    amount = None
+
+    # common keywords for total
+    keywords = ["total", "amount due", "balance due", "grand total"]
+
+    for line in lines:
+        clean = line.lower().strip()
+        if any(k in clean for k in keywords):
+            # find number in line
+            match = re.search(r"(\d+[.,]?\d{0,2})", line.replace(",", ""))
+            if match:
+                try:
+                    amount = float(match.group(1))
+                except:
+                    continue
+
+    # fallback: pick the largest number in the receipt (often total is largest)
+    if not amount:
+        numbers = [float(m.group()) for m in re.finditer(r"\d+[.,]?\d{0,2}", text.replace(",", ""))]
+        if numbers:
+            amount = max(numbers)
+
+    if not amount:
+        return None
+
+    return {
+        "amount": amount,
+        "type": "expense",
+        "category": "Misc",   # could be smarter later
+        "note": "POS receipt auto",
+        "date": None
+    }

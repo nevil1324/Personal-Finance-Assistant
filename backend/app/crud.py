@@ -165,6 +165,7 @@ async def update_transaction(user_id: ObjectId, tx_id: str, update_fields: Dict[
     Update transaction with tx_id owned by user_id. Returns updated document or raises.
     update_fields keys: amount, date (iso), category, description, type
     """
+    print(update_fields)
     if 'date' in update_fields and isinstance(update_fields['date'], str):
         try:
             update_fields['date'] = datetime.fromisoformat(update_fields['date'])
@@ -184,6 +185,12 @@ async def update_transaction(user_id: ObjectId, tx_id: str, update_fields: Dict[
     updated = await db[TRAN_COL].find_one({'_id': ObjectId(tx_id)})
     if not updated:
         raise ValueError('Failed to fetch updated transaction')
+    updated['date'] = update_fields['date']
+    updated['amount'] = update_fields['amount']
+    updated['category'] = update_fields['category']
+    updated['note'] = update_fields['note']
+    updated['type'] = update_fields['type']
+
     updated['id'] = str(updated['_id'])
     updated.pop('_id', None)
     updated.pop('user_id', None)
