@@ -10,6 +10,7 @@ class Token(BaseModel):
 class CategoryCreate(BaseModel):
     name: str
     type: str = Field(..., pattern="^(income|expense)$")
+    icon: Optional[str] = None
 class CategoryOut(CategoryCreate):
     id: str
 class TransactionCreate(BaseModel):

@@ -62,17 +62,13 @@ def parse_pdf_table(file_bytes: bytes):
                     continue
                 headers = table[0]
                 for r in table[1:]:
-                    # naive mapping: try to find amount-like column
                     row = dict(zip(headers, r))
-                    # find numeric in row values
                     amount = None; date=None; desc=''
                     for v in r:
                         if not v: continue
-                        # amount
                         am = re.search(r'([0-9]+[.,][0-9]{2})', v)
                         if am and amount is None:
                             amount = float(am.group(1).replace(',',''))
-                        # date
                         try:
                             dt = dateparser.parse(v, fuzzy=True)
                             if date is None:

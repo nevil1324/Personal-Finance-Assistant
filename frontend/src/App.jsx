@@ -10,8 +10,32 @@ export default function App(){
   const [token,setToken]=useState(localStorage.getItem('pfa_token'))
   const [view,setView]=useState('dashboard')
   const [categories,setCategories]=useState({income:[], expense:[]})
-  useEffect(()=>{ if(token) api.setToken(token); if(token) loadCategories() },[token])
-  async function loadCategories(){ try{ const res = await api.get('/categories'); const inc = res.data.filter(c=>c.type==='income'); const exp = res.data.filter(c=>c.type==='expense'); setCategories({income:inc.map(c=>c.name), expense:exp.map(c=>c.name)}) }catch(e){ console.error(e) } }
+
+  if (token) {
+    api.setToken(token)
+  }
+
+  useEffect(() => {
+    if (!token) return
+    // load categories after token set
+    (async () => {
+      try {
+        const res = await api.get('/categories')
+        const inc = res.data.filter(c => c.type === 'income')
+        const exp = res.data.filter(c => c.type === 'expense')
+        setCategories({ income: inc, expense: exp })
+      } catch (err) {
+        console.error('Failed to load categories', err)
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          // token invalid — force logout
+          localStorage.removeItem('pfa_token')
+          setToken(null)
+        }
+      }
+    })()
+  }, [token])
+
+  async function loadCategories(){ try{ const res = await api.get('/categories'); const inc = res.data.filter(c=>c.type==='income'); const exp = res.data.filter(c=>c.type==='expense'); setCategories({income: inc, expense: exp}) }catch(e){ console.error(e) } }
   if(!token) return <Auth setToken={t=>{localStorage.setItem('pfa_token',t); setToken(t)}} />
   return (
     <div className='container'>
@@ -29,13 +53,13 @@ export default function App(){
       </header>
       <main className='grid'>
         <section className='card'>
-          {view==='dashboard' && <Charts />}
+          {view==='dashboard' && <Charts categories={categories} />}
           {view==='transactions' && <Transactions categories={categories} />}
           {view==='upload' && <UploadReceipt categories={categories} />}
         </section>
         <aside className='card'>
           <h4>Quick Add</h4>
-          <QuickAdd categories={categories} onAdded={()=>{ /* no-op */ }} />
+          <QuickAdd categories={categories} onAdded={loadCategories} />
         </aside>
       </main>
     </div>
@@ -52,10 +76,10 @@ function Auth({setToken}){
   )
 }
 
-function QuickAdd({categories}){
-  const catList = categories?.expense || ['misc']
-  const [type,setType]=useState('expense'); const [amount,setAmount]=useState(''); const [category,setCategory]=useState(catList[0]||'misc'); const [note,setNote]=useState(''); const [msg,setMsg]=useState('')
-  useEffect(()=>{ setCategory((type==='expense'? (categories?.expense||[]):(categories?.income||[]))[0] || 'misc') },[type, categories])
-  async function submit(e){ e.preventDefault(); if(!amount){ setMsg('Amount is required'); return } try{ await api.post('/transactions',{type,amount:parseFloat(amount),category,note}); setMsg('Added ✓'); setAmount(''); setNote(''); setTimeout(()=>setMsg(''),2000) }catch(err){ setMsg('Failed: '+(err.response?.data?.detail||err.message)) } }
-  return (<form onSubmit={submit}><div className='form-row'><label className='small'>Type</label><select className='input' value={type} onChange={e=>setType(e.target.value)}><option value='expense'>Expense</option><option value='income'>Income</option></select></div><div className='form-row'><label className='small'>Amount *</label><input className='input' value={amount} onChange={e=>setAmount(e.target.value)} /></div><div className='form-row'><label className='small'>Category</label><select className='input' value={category} onChange={e=>setCategory(e.target.value)}>{(type==='expense'? (categories?.expense||[]): (categories?.income||[])).map(c=>(<option key={c} value={c}>{c}</option>))}</select></div><div className='form-row'><label className='small'>Note</label><input className='input' value={note} onChange={e=>setNote(e.target.value)} /></div><div style={{display:'flex',gap:8}}><button className='btn' type='submit'>Add</button><div className='small' style={{alignSelf:'center'}}>{msg}</div></div></form>)
+function QuickAdd({categories, onAdded}){
+  const catList = categories?.expense || []
+  const [type,setType]=useState('expense'); const [amount,setAmount]=useState(''); const [category,setCategory]=useState(catList[0]?.name || 'Misc'); const [note,setNote]=useState(''); const [msg,setMsg]=useState('')
+  useEffect(()=>{ const list = type==='expense' ? (categories?.expense||[]) : (categories?.income||[]); setCategory(list[0]?.name || '') }, [type, categories])
+  async function submit(e){ e.preventDefault(); if(!amount){ setMsg('Amount is required'); return } try{ await api.post('/transactions',{type, amount: parseFloat(amount), category, note}); setMsg('Added ✓'); setAmount(''); setNote(''); onAdded && onAdded(); setTimeout(()=>setMsg(''),2000) }catch(err){ setMsg('Failed: '+(err.response?.data?.detail||err.message)) } }
+  return (<form onSubmit={submit}><div className='form-row'><label className='small'>Type</label><select className='input' value={type} onChange={e=>setType(e.target.value)}><option value='expense'>Expense</option><option value='income'>Income</option></select></div><div className='form-row'><label className='small'>Amount *</label><input className='input' value={amount} onChange={e=>setAmount(e.target.value)} /></div><div className='form-row'><label className='small'>Category</label><select className='input' value={category} onChange={e=>setCategory(e.target.value)}>{(type==='expense'? (categories?.expense||[]): (categories?.income||[])).map(c=>(<option key={c.id} value={c.name}>{(c.icon? c.icon + ' ': '') + c.name}</option>))}</select></div><div className='form-row'><label className='small'>Note</label><input className='input' value={note} onChange={e=>setNote(e.target.value)} /></div><div style={{display:'flex',gap:8}}><button className='btn' type='submit'>Add</button><div className='small' style={{alignSelf:'center'}}>{msg}</div></div></form>)
 }

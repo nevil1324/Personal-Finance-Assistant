@@ -2,9 +2,9 @@ from .db import get_db
 from bson.objectid import ObjectId
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-USERS = "users"
-CAT = "categories"
-COL = "transactions"
+USERS = 'users'
+CAT = 'categories'
+COL = 'transactions'
 async def create_user(user_dict: dict):
     db = get_db()
     res = await db[USERS].insert_one(user_dict)
@@ -13,18 +13,56 @@ async def create_user(user_dict: dict):
 async def get_user_by_email(email: str):
     db = get_db()
     return await db[USERS].find_one({'email': email})
+# async def create_category(cat: dict):
+#     db = get_db()
+#     res = await db[CAT].insert_one(cat)
+#     cat['_id'] = res.inserted_id
+#     return cat
+# async def list_categories(user_id) -> List[Dict[str,Any]]:
+#     db = get_db()
+#     cursor = db[CAT].find({'user_id': user_id})
+#     out = []
+#     async for d in cursor:
+#         out.append({'id': str(d['_id']), 'name': d['name'], 'type': d['type'], 'icon': d.get('icon')})
+#     return out
+
+# backend/app/crud.py  (only relevant parts shown — replace corresponding functions)
+from .db import get_db
+from bson.objectid import ObjectId
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+
+USERS = 'users'
+CAT = 'categories'
+COL = 'transactions'
+
+# ... existing functions (create_user, get_user_by_email etc.) remain unchanged ...
 async def create_category(cat: dict):
+    """
+    Create a global category. If a category with same (name, type) already exists,
+    return the existing one instead of inserting a duplicate.
+    """
     db = get_db()
+    # look for existing by name + type
+    existing = await db[CAT].find_one({'name': cat['name'], 'type': cat['type']})
+    if existing:
+        # return existing doc (augmented with _id)
+        return existing
     res = await db[CAT].insert_one(cat)
     cat['_id'] = res.inserted_id
     return cat
-async def list_categories(user_id) -> List[Dict[str,Any]]:
+
+async def list_categories() -> List[Dict[str,Any]]:
+    """
+    Return the global list of categories (no user filtering).
+    """
     db = get_db()
-    cursor = db[CAT].find({'user_id': user_id})
+    cursor = db[CAT].find({}).sort([('type', 1), ('name', 1)])
     out = []
     async for d in cursor:
-        out.append({'id': str(d['_id']), 'name': d['name'], 'type': d['type']})
+        out.append({'id': str(d['_id']), 'name': d['name'], 'type': d['type'], 'icon': d.get('icon')})
     return out
+
 async def create_transaction(user_id, doc: dict) -> dict:
     db = get_db()
     doc['user_id'] = user_id
