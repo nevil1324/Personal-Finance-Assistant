@@ -1,38 +1,28 @@
-from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from . import crud, database
-from sqlalchemy.orm import Session
+import os, jwt
 
-SECRET = 'please_change_me_in_prod'
-ALGORITHM = 'HS256'
-ACCESS_EXPIRE_MIN = 60*24
+PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
+SECRET_KEY = os.getenv("SECRET_KEY", "change_me_for_prod")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60*24*7  # 7 days
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+def hash_password(password: str) -> str:
+    return PWD_CONTEXT.hash(password)
 
-def create_access_token(data: dict, expires_delta: int = ACCESS_EXPIRE_MIN):
+def verify_password(plain: str, hashed: str) -> bool:
+    return PWD_CONTEXT.verify(plain, hashed)
+
+def create_access_token(data: dict, expires_delta: int | None = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=expires_delta)
-    to_encode.update({'exp': expire})
-    return jwt.encode(to_encode, SECRET, algorithm=ALGORITHM)
+    expire = datetime.utcnow() + timedelta(minutes=(expires_delta or ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    encoded = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
+def decode_token(token: str):
     try:
-        payload = jwt.decode(token, SECRET, algorithms=[ALGORITHM])
-        user_id = int(payload.get('sub'))
-    except JWTError:
-        raise HTTPException(401, 'Could not validate credentials')
-    user = crud.get_user(db, user_id)
-    if not user:
-        raise HTTPException(401, 'User not found')
-    return user
-
-def authenticate_user(db: Session, email: str, password: str):
-    user = crud.get_user_by_email(db, email)
-    if not user:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except Exception:
         return None
-    # naive check: store hashed password in prod
-    if user.hashed_password != password:
-        return None
-    return user
