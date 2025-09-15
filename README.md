@@ -171,18 +171,14 @@ npm run dev
 * Upload **PDF** or **image receipts**
 * OCR extracts text, parses total amount, and automatically creates a transaction
 
----
 
+
+```markdown
 ## 🖼️ Screenshots
 
-```markdown
-![Alt text](relative/or/absolute/path/to/image.png)
-```
-
-
-```markdown
-![Dashboard](frontend/src/images/dashboard_page.png)
-![Transactions](frontend/src/images/transaction_page.png)
-![Time series Graph](frontend/src/images/time_series_graph.png)
+![Dashboard](frontend/src/images/dashboard_page.png)  
+![Transactions](frontend/src/images/transaction_page.png)  
+![Time series Graph](frontend/src/images/time_series_graph.png)  
 ![Upload Receipt](frontend/src/images/file_upload.png)
+
 ```
