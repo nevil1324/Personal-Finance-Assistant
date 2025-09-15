@@ -155,7 +155,9 @@ export default function Transactions({ refreshTrigger }) {
       }
 
       // Avoid duplicates
-      const exists = items.some((t) => (t._id || t.id) === (saved._id || saved.id));
+      const exists = items.some(
+        (t) => (t._id || t.id) === (saved._id || saved.id)
+      );
       if (exists) return;
 
       // If user is on page 1, prepend for instant UX; otherwise reload page 1

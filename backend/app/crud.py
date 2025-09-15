@@ -133,7 +133,6 @@ async def get_transactions(user_id: ObjectId, start: Optional[datetime] = None, 
         if end:
             query['date']['$lte'] = end
     if tx_type:
-        # field name in DB is 'type' by this project convention
         query['type'] = tx_type
 
     cursor = db[TRAN_COL].find(query).sort('date', -1).skip(max(0, skip)).limit(max(0, limit))

@@ -75,7 +75,6 @@ async def login(payload: UserCreate):
     token = create_access_token({'user_id': str(user['_id']), 'email': user['email']})
     return {'access_token': token}
 
-# improved get_current_user - paste into your routes/auth module
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials if credentials else None
     if not token:
@@ -118,8 +117,6 @@ async def add_transaction(payload: TransactionCreate, user_id = Depends(get_curr
             doc['date'] = datetime.utcnow()  # empty string or None → fallback
 
     saved = await create_transaction(ObjectId(user_id), doc)
-    # saved.pop('_id', None)
-    # saved.pop('user_id', None)
     return saved
 
 @router.get('/transactions')
@@ -147,9 +144,6 @@ async def delete_transaction(tx_id: str, user_id = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail='Transaction not found')
     return {'message': 'Deleted'}
 
-
-
-
 @router.get('/aggregate/category')
 async def agg_category(start: str | None = None, end: str | None = None, tx_type: str | None = None, user_id = Depends(get_current_user)):
     start_dt = datetime.fromisoformat(start) if start else None
@@ -162,13 +156,10 @@ async def agg_date(start: str | None = None, end: str | None = None, tx_type: st
     end_dt = datetime.fromisoformat(end) if end else None
     return await aggregate_by_date(ObjectId(user_id), start=start_dt, end=end_dt, tx_type=tx_type)
 
-
 @router.post('/ocr', response_model=OCRResult)
 async def ocr_upload(file: UploadFile = File(...), user_id = Depends(get_current_user), auto_create: bool = Query(False)):
     content = await file.read()
     text = await ocr_image_bytes(content)
-    # parsed = auto_parse_transactions(text)
-    # if not parsed:
     pos_tx = parse_pos_receipt(text)
     parsed = [pos_tx] if pos_tx else []
 

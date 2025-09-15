@@ -5,6 +5,7 @@ import pdfplumber
 from pdf2image import convert_from_bytes
 from dateutil import parser as dateparser
 AMOUNT_RE = re.compile(r'(?:(?:Rs\.|INR|USD|EUR|Rs|₹)?\s?\b)([0-9]+(?:[.,][0-9]{2})?)')
+
 async def ocr_image_bytes(file_bytes: bytes) -> str:
     try:
         im = Image.open(io.BytesIO(file_bytes)).convert('RGB')
@@ -24,6 +25,7 @@ async def ocr_image_bytes(file_bytes: bytes) -> str:
                     return "\n".join(texts)
             except Exception:
                 return ''
+        
 def parse_amounts(text: str):
     amounts = []
     for m in AMOUNT_RE.finditer(text):
@@ -35,6 +37,7 @@ def parse_amounts(text: str):
             continue
     unique = sorted(set(amounts), reverse=True)
     return unique
+
 def parse_dates(text: str):
     dates = []
     for line in text.splitlines():
@@ -45,6 +48,7 @@ def parse_dates(text: str):
         except Exception:
             continue
     return dates
+
 def auto_parse_transactions(text: str):
     amounts = parse_amounts(text)
     dates = parse_dates(text)
@@ -52,6 +56,7 @@ def auto_parse_transactions(text: str):
     for a in amounts:
         parsed.append({'type':'expense','amount':a,'category':'receipt','note':'Parsed from OCR','date': dates[0].isoformat() if dates else None})
     return parsed
+
 def parse_pdf_table(file_bytes: bytes):
     rows = []
     try:
@@ -81,7 +86,6 @@ def parse_pdf_table(file_bytes: bytes):
         pass
     return rows
 
-import re
 
 def parse_pos_receipt(text: str):
     """

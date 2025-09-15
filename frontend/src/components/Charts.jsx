@@ -117,12 +117,11 @@ export default function Charts({ categories, refreshCounter }) {
     ],
   };
 
-  // Force remount of Line when txType or range changes (prevents stale chart instance)
   const lineKey = `${txType}::${range.start || "ns"}::${range.end || "ne"}::${
     byDate.length
   }`;
 
-  const overallTotal = byDate.reduce((s, x) => s + (Number(x.total) || 0), 0)
+  const overallTotal = byDate.reduce((s, x) => s + (Number(x.total) || 0), 0);
 
   return (
     <div>
@@ -234,7 +233,6 @@ export default function Charts({ categories, refreshCounter }) {
                 scales: { x: { display: true }, y: { display: true } },
               }}
             />
-
           </div>
         ) : (
           <div className="small">No time-series data yet.</div>
