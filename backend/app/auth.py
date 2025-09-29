@@ -4,7 +4,7 @@ import os, jwt
 PWD_CONTEXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
 SECRET_KEY = os.getenv('SECRET_KEY', 'change_me_for_prod')
 ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 60*24*7
+ACCESS_TOKEN_EXPIRE_MINUTES = 60*24*7 # 1 week
 
 def hash_password(password: str) -> str:
     return PWD_CONTEXT.hash(password)

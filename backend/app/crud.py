@@ -202,7 +202,7 @@ async def delete_transaction(user_id: ObjectId, tx_id: str) -> bool:
 
 
 # -----------------------
-# Aggregations
+# Aggregations For analysis
 # -----------------------
 async def aggregate_by_category(user_id: ObjectId, start: Optional[datetime] = None, end: Optional[datetime] = None,
                                 tx_type: Optional[str] = None) -> List[Dict[str, Any]]:
