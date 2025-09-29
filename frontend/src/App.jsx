@@ -5,6 +5,7 @@ import Transactions from "./components/Transactions";
 import UploadReceipt from "./components/UploadReceipt";
 import Charts from "./components/Charts";
 import api from "./lib/api";
+// import AISummary from "./components/AISummary";
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("pfa_token"));
@@ -81,6 +82,8 @@ export default function App() {
           >
             Transactions
           </button>
+          {/* <button className="btn secondary" onClick={() => setView("ai")}>AI Summary</button> */}
+
           <button className="btn secondary" onClick={() => setView("upload")}>
             Upload Receipt
           </button>
@@ -107,9 +110,11 @@ export default function App() {
               refreshCounter={refreshCounter}
             />
           )}
+          {/* {view === "ai" && <AISummary />}  */}
           {view === "upload" && (
             <UploadReceipt categories={categories} onRefresh={triggerRefresh} />
           )}
+          
         </section>
 
         <aside className="card">

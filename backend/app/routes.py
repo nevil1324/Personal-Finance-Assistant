@@ -6,11 +6,13 @@ from .utils import ocr_image_bytes, auto_parse_transactions, parse_pdf_table,par
 from .auth import hash_password, verify_password, create_access_token, decode_token
 from .crud import update_transaction as update_transaction_crud, delete_transaction as delete_transaction_crud, get_user_by_id
 from datetime import datetime
+# from datetime import timedelta
 from bson import ObjectId
 from typing import Optional
 router = APIRouter()
 security = HTTPBearer()
 import re
+
 
 
 PASSWORD_REGEX = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$')
@@ -203,3 +205,38 @@ async def seed_categories():
         cid = str(res.get('_id') or res.get('id') or '')
         created.append({'name': c['name'], 'type': c['type'], 'id': cid})
     return {"status": "ok", "seeded": created}
+
+
+# from pydantic import BaseModel
+# from typing import Optional
+# from datetime import datetime
+# from fastapi import Depends, HTTPException
+# from .crud import get_transactions  # already defined in your CRUD
+# from bson import ObjectId
+
+# from pydantic import BaseModel
+# from typing import Optional
+# from fastapi import Depends, HTTPException
+# from bson import ObjectId
+
+# # NEW import
+# from .chatbot import summarize_with_llm_on_raw
+
+# class SummaryRequest(BaseModel):
+#     prompt: str
+#     tx_type: Optional[str] = None  # optional: "income" | "expense"
+
+# @router.post("/llm/summary")
+# async def llm_summary(payload: SummaryRequest, user_id = Depends(get_current_user)):
+#     tx_type = payload.tx_type if payload.tx_type in ("income", "expense") else None
+
+#     items = await get_transactions(
+#         ObjectId(user_id),
+#         start=None,
+#         end=None,
+#         skip=0,
+#         limit=100000,
+#         tx_type=tx_type,
+#     )
+
+#     return summarize_with_llm_on_raw(payload.prompt, items)
